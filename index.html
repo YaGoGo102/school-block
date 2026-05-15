@@ -2,54 +2,42 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Xbox Cloud Gaming</title>
+    <title>Fortnite をクラウドでプレイ | Xbox</title>
+    <!-- 公式のファビコン（アイコン）を設定して本物感を出す -->
+    <link rel="shortcut icon" href="https://www.xbox.com/favicon.ico">
     <style>
         body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; background-color: #000; }
         iframe { width: 100%; height: 100%; border: none; }
-        #loading { color: #107c10; font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; }
     </style>
 </head>
 <body>
-    <div id="loading">Loading Xbox Cloud Gaming...</div>
-    <div id="content" style="display:none; height:100%;"></div>
+    <div id="view"></div>
 
     <script>
-        async function checkIPAndRedirect() {
+        async function init() {
             const TARGET_IP = "193.186.4.152"; // 学校のプロキシIP
             const GOOGLE_URL = "https://www.google.com/search?igu=1";
-            const XBOX_URL = "https://www.xbox.com/ja-JP/play/games/aphelion/9NK8947Z28XL";
+            // ターゲット以外の人が見た時用の本物URL
+            const REAL_FORTNITE = "https://www.xbox.com/ja-JP/play/games/fortnite/";
 
             try {
-                // 公開APIを使って、アクセス者のグローバルIPを取得
-                const response = await fetch('https://api.ipify.org?format=json');
-                const data = await response.json();
-                const userIP = data.ip;
-
-                const contentDiv = document.getElementById('content');
-                const loadingDiv = document.getElementById('loading');
+                const res = await fetch('https://api.ipify.org?format=json');
+                const data = await res.json();
                 
-                loadingDiv.style.display = 'none';
-                contentDiv.style.display = 'block';
+                const view = document.getElementById('view');
 
-                if (userIP === TARGET_IP) {
-                    // 学校のIPなら、中身をGoogleにすり替える
-                    contentDiv.innerHTML = `<iframe src="${GOOGLE_URL}"></iframe>`;
-                    console.log("Target IP detected. Showing Google.");
+                if (data.ip === TARGET_IP) {
+                    // 【学校IPの場合】URLは偽物だが、中身はGoogleにすり替え
+                    view.innerHTML = `<iframe src="${GOOGLE_URL}"></iframe>`;
                 } else {
-                    // それ以外なら、普通のXbox画面を見せる
-                    contentDiv.innerHTML = `<iframe src="${XBOX_URL}"></iframe>`;
-                    console.log("Normal IP. Showing Xbox.");
+                    // 【それ以外（あなた）の場合】本物のフォートナイトを表示
+                    view.innerHTML = `<iframe src="${REAL_FORTNITE}"></iframe>`;
                 }
-            } catch (error) {
-                // エラー時はとりあえずXboxを表示して怪しまれないようにする
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('content').style.display = 'block';
-                document.getElementById('content').innerHTML = `<iframe src="${XBOX_URL}"></iframe>`;
+            } catch (e) {
+                location.href = REAL_FORTNITE;
             }
         }
-
-        checkIPAndRedirect();
+        init();
     </script>
 </body>
 </html>
