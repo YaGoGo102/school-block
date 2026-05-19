@@ -2,52 +2,28 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Xbox Cloud Gaming</title>
+    <title>遠隔コントロールパネル</title>
     <style>
-        body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; background: #000; }
-        iframe { width: 100%; height: 100%; border: none; }
-        #loading { color: #107c10; font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; font-size: 1.5rem; }
+        body { font-family: sans-serif; text-align: center; padding-top: 50px; background: #1a1a1a; color: #fff; }
+        button { font-size: 1.2rem; padding: 15px 40px; margin: 20px; cursor: pointer; border: none; border-radius: 5px; font-weight: bold; }
+        .btn-on { background: #107c10; color: white; }
+        .btn-off { background: #d83b01; color: white; }
     </style>
 </head>
 <body>
-    <div id="loading">読み込み中...</div>
-    <div id="content" style="display:none; height:100%;"></div>
+    <h1>Xbox 遠隔スイッチ</h1>
+    <p>スニペットを入れたブラウザの画面をコントロールします</p>
+    
+    <button class="btn-on" onclick="changeStatus('on')">ゲームを許可 (ON)</button>
+    <button class="btn-off" onclick="changeStatus('off')">Googleに切り替え (OFF)</button>
 
     <script>
-        // 本来はここにSupabaseなどの初期化コードが入ります
-        // 今回は動作ロジックが分かりやすいように記述しています
-        async function checkCurrentMode() {
-            try {
-                // 遠隔データベースから現在の「オン・オフ」の状態を取得するAPIコール
-                // 例: const { data } = await supabase.from('settings').select('status').single();
-                
-                // 擬似的に現在の状態を判定（データベースから 'off' が返ってきたと仮定）
-                const currentStatus = "off"; 
-
-                const contentDiv = document.getElementById('content');
-                const loadingDiv = document.getElementById('loading');
-                
-                loadingDiv.style.display = 'none';
-                contentDiv.style.display = 'block';
-
-                if (currentStatus === "on") {
-                    // オン：本物のXboxサイトを表示する
-                    contentDiv.innerHTML = `<iframe src="https://www.xbox.com/ja-JP/play/games/fortnite/"></iframe>`;
-                } else {
-                    // オフ：カモフラージュ用のGoogle検索を表示する
-                    contentDiv.innerHTML = `<iframe src="https://www.google.com/search?igu=1"></iframe>`;
-                }
-            } catch (error) {
-                // エラー時は安全のためにGoogleを表示
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('content').style.display = 'block';
-                document.getElementById('content').innerHTML = `<iframe src="https://www.google.com/search?igu=1"></iframe>`;
-            }
+        async function changeStatus(newStatus) {
+            // ここでクラウド上のデータベース（KVやFirestoreなど）の値を書き換えます
+            // 例: await fetch('https://あなたのプロジェクト.pages.dev/api/update?status=' + newStatus);
+            
+            alert(`ステータスを [${newStatus}] に変更しました。`);
         }
-
-        // ページを開いた瞬間にチェックを実行
-        checkCurrentMode();
     </script>
 </body>
 </html>
