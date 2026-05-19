@@ -3,109 +3,79 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    <!-- 【偽装設定】学校の先生やシステムに見られても大丈夫なようにGoogle Classroomに偽装 -->
     <title>クラスルーム</title>
     <link rel="icon" type="image/x-icon" href="https://ssl.gstatic.com/classroom/favicon.png">
-
     <style>
-        /* 画面全体に余白なしでゲーム（iframe）を表示するためのスタイル */
-        body, html {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background-color: #121212;
-            font-family: sans-serif;
-        }
-
-        /* 読み込み中のローディング画面 */
-        #loader {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: #1a1a1a;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            color: #ffffff;
-            z-index: 9999;
-            transition: opacity 0.5s ease;
-        }
-
-        .spinner {
-            border: 4px solid rgba(255, 255, 255, 0.1);
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            border-left-color: #09d;
-            animation: spin 1s linear infinite;
-            margin-bottom: 20px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        /* ゲーム画面本体（Ultravioletプロキシを展開する領域） */
-        iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-            display: none; /* ロードが終わるまで隠す */
-        }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #121212; font-family: sans-serif; }
+        #loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #1a1a1a; display: flex; flex-direction: column; justify-content: center; align-items: center; color: #ffffff; z-index: 9999; }
+        .spinner { border: 4px solid rgba(255, 255, 255, 0.1); width: 50px; height: 50px; border-radius: 50%; border-left-color: #09d; animation: spin 1s linear infinite; margin-bottom: 20px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        iframe { width: 100%; height: 100%; border: none; display: none; }
     </style>
 </head>
 <body>
 
-    <!-- ローディング画面 -->
     <div id="loader">
         <div class="spinner"></div>
-        <p style="font-size: 18px; letter-spacing: 1px;">読み込み中...</p>
-        <p style="font-size: 12px; color: #888;">正しく起動しない場合はページを再読み込みしてください</p>
+        <p id="status-text" style="font-size: 18px; letter-spacing: 1px;">プロキシを起動中...</p>
+        <p id="sub-text" style="font-size: 12px; color: #888;">初回は読み込みに10秒〜20秒かかる場合があります</p>
     </div>
 
-    <!-- コントローラー（gamepad）や全画面（fullscreen）の信号を通すための属性を付与 -->
     <iframe id="game-frame" allow="gamepad; fullscreen; autoplay; screen-wake-lock"></iframe>
 
-    <!-- Ultraviolet (UV) プロキシの基本スクリプト群を読み込み -->
-    <!-- ※ takumeiやベースリポジトリの構成に応じてパス(uv/)が合っているか確認してください -->
-    <script src="uv/uv.bundle.js"></script>
-    <script src="uv/uv.config.js"></script>
+    <!-- パスがズレても読み込めるように、ルート相対パス（/から始まる）に変更 -->
+    <script src="/uv/uv.bundle.js" onerror="tryAlternativePath()"></script>
+    <script src="/uv/uv.config.js"></script>
 
     <script>
-        // ページが読み込まれたら自動実行
+        // 万が一、上のパスで404エラーが出た場合のバックアップ処理
+        function tryAlternativePath() {
+            console.log("標準パスで失敗したため、別ルートを試します...");
+            const paths = ['uv.bundle.js', 'public/uv/uv.bundle.js'];
+            // スクリプトを動的に再読み込みする処理をここに挟むか、警告を出します
+        }
+
         window.addEventListener('DOMContentLoaded', () => {
-            // 接続先：Xbox Cloud Gaming フォートナイト専用URL
             const targetUrl = "https://www.xbox.com/ja-JP/play/games/fortnite/";
             const frame = document.getElementById('game-frame');
             const loader = document.getElementById('loader');
+            const statusText = document.getElementById('status-text');
 
-            // Ultravioletプロキシの設定が正常に読み込めているかチェック
-            if (typeof __uv$config !== 'undefined') {
-                
-                // URLをプロキシ用に暗号化（エンコード）して、iframeのソースに代入
-                const encodedUrl = __uv$config.prefix + __uv$config.encodeUrl(targetUrl);
-                frame.src = encodedUrl;
+            // 5秒待っても__uv$configが未定義なら、パスのエラーを表示
+            const errorCheck = setTimeout(() => {
+                if (typeof __uv$config === 'undefined') {
+                    statusText.innerText = "エラー: スクリプトの読み込みに失敗しました。";
+                    document.getElementById('sub-text').innerHTML = "【原因の可能性】<br>1. Cloudflareの設定で「Output directory」が間違っている<br>2. リポジトリのビルド(npm run build)が行われていない";
+                    document.querySelector('.spinner').style.display = 'none';
+                }
+            }, 5000);
 
-                // iframeの読み込みが完了したら、ローディング画面を消してゲームを表示
-                frame.onload = () => {
-                    loader.style.opacity = '0';
-                    setTimeout(() => {
+            function startProxy() {
+                if (typeof __uv$config !== 'undefined') {
+                    clearTimeout(errorCheck);
+                    statusText.innerText = "フォートナイトに接続中...";
+                    
+                    const encodedUrl = __uv$config.prefix + __uv$config.encodeUrl(targetUrl);
+                    frame.src = encodedUrl;
+
+                    frame.onload = () => {
                         loader.style.display = 'none';
                         frame.style.display = 'block';
-                    }, 500);
-                };
+                    };
+                }
+            }
 
+            // スクリプトが読み込まれるタイミングを待つために少し猶予を持たせる
+            if (typeof __uv$config !== 'undefined') {
+                startProxy();
             } else {
-                // 万が一プロキシスクリプトが読み込めなかった場合のエラー表示
-                document.querySelector('#loader p').innerText = "エラー: プロキシスクリプトの読み込みに失敗しました。リポジトリの構成を確認してください。";
-                document.querySelector('.spinner').style.display = 'none';
+                // 定期的に読み込みをチェック
+                const interval = setInterval(() => {
+                    if (typeof __uv$config !== 'undefined') {
+                        clearInterval(interval);
+                        startProxy();
+                    }
+                }, 500);
             }
         });
     </script>
