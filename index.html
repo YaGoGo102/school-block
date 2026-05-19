@@ -2,42 +2,52 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>Fortnite をクラウドでプレイ | Xbox</title>
-    <!-- 公式のファビコン（アイコン）を設定して本物感を出す -->
-    <link rel="shortcut icon" href="https://www.xbox.com/favicon.ico">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xbox Cloud Gaming</title>
     <style>
-        body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; background-color: #000; }
+        body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; background: #000; }
         iframe { width: 100%; height: 100%; border: none; }
+        #loading { color: #107c10; font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; font-size: 1.5rem; }
     </style>
 </head>
 <body>
-    <div id="view"></div>
+    <div id="loading">読み込み中...</div>
+    <div id="content" style="display:none; height:100%;"></div>
 
     <script>
-        async function init() {
-            const TARGET_IP = "193.186.4.152"; // 学校のプロキシIP
-            const GOOGLE_URL = "https://www.google.com/search?igu=1";
-            // ターゲット以外の人が見た時用の本物URL
-            const REAL_FORTNITE = "https://www.xbox.com/ja-JP/play/games/fortnite/";
-
+        // 本来はここにSupabaseなどの初期化コードが入ります
+        // 今回は動作ロジックが分かりやすいように記述しています
+        async function checkCurrentMode() {
             try {
-                const res = await fetch('https://api.ipify.org?format=json');
-                const data = await res.json();
+                // 遠隔データベースから現在の「オン・オフ」の状態を取得するAPIコール
+                // 例: const { data } = await supabase.from('settings').select('status').single();
                 
-                const view = document.getElementById('view');
+                // 擬似的に現在の状態を判定（データベースから 'off' が返ってきたと仮定）
+                const currentStatus = "off"; 
 
-                if (data.ip === TARGET_IP) {
-                    // 【学校IPの場合】URLは偽物だが、中身はGoogleにすり替え
-                    view.innerHTML = `<iframe src="${GOOGLE_URL}"></iframe>`;
+                const contentDiv = document.getElementById('content');
+                const loadingDiv = document.getElementById('loading');
+                
+                loadingDiv.style.display = 'none';
+                contentDiv.style.display = 'block';
+
+                if (currentStatus === "on") {
+                    // オン：本物のXboxサイトを表示する
+                    contentDiv.innerHTML = `<iframe src="https://www.xbox.com/ja-JP/play/games/fortnite/"></iframe>`;
                 } else {
-                    // 【それ以外（あなた）の場合】本物のフォートナイトを表示
-                    view.innerHTML = `<iframe src="${REAL_FORTNITE}"></iframe>`;
+                    // オフ：カモフラージュ用のGoogle検索を表示する
+                    contentDiv.innerHTML = `<iframe src="https://www.google.com/search?igu=1"></iframe>`;
                 }
-            } catch (e) {
-                location.href = REAL_FORTNITE;
+            } catch (error) {
+                // エラー時は安全のためにGoogleを表示
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('content').style.display = 'block';
+                document.getElementById('content').innerHTML = `<iframe src="https://www.google.com/search?igu=1"></iframe>`;
             }
         }
-        init();
+
+        // ページを開いた瞬間にチェックを実行
+        checkCurrentMode();
     </script>
 </body>
 </html>
