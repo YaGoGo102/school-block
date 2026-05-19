@@ -1,23 +1,29 @@
-<script>
-  window.addEventListener('DOMContentLoaded', () => {
-    // フォートナイトの公式URL
-    const targetUrl = "https://www.xbox.com/ja-JP/play/games/fortnite/";
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Science Project</title> <!-- 学校対策用にタイトルを偽装 -->
+    <style>
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #000; }
+        iframe { width: 100%; height: 100%; border: none; }
+    </style>
+</head>
+<body>
+    <!-- プロキシのスクリプトを読み込む（リポジトリのパスに合わせて調整してください） -->
+    <script src="uv/uv.bundle.js"></script>
+    <script src="uv/uv.config.js"></script>
     
-    // Ultraviolet（プロキシ）のエンコード関数が利用可能か確認
-    if (typeof __uv$config !== 'undefined' && Ultraviolet) {
-      const uv = new Ultraviolet(__uv$config.prefix, __uv$config.bare);
-      // プロキシ用にエンコードされたURLを生成して自動ジャンプ
-      window.location.href = __uv$config.prefix + uv.encodeUrl(targetUrl);
-    } else {
-      // 簡易的なプロキシ構成、または直接埋め込み型（iframe）の場合
-      // サイト内のメインiframe（大体 id="uv-frame" や id="frame"）を探して自動で読み込む
-      const frame = document.getElementById('uv-frame') || document.getElementById('frame');
-      if (frame) {
-        frame.src = __uv$config.prefix + uv.encodeUrl(targetUrl);
-      } else {
-        // 最悪の場合、直接アドレスを乗せてジャンプを試みる
-        console.log("フォートナイトへ自動接続中...");
-      }
-    }
-  });
-</script>
+    <iframe id="game-frame"></iframe>
+
+    <script>
+        // ページ読み込み時にフォートナイトをプロキシ経由で開く
+        window.onload = function() {
+            const target = "https://www.xbox.com/ja-JP/play/games/fortnite/";
+            if (window.__uv$config) {
+                document.getElementById('game-frame').src = __uv$config.prefix + __uv$config.encodeUrl(target);
+            }
+        };
+    </script>
+</body>
+</html>
