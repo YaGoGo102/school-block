@@ -3,44 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>クラスルーム</title> <!-- Google Classroomへの偽装 -->
-    <link rel="icon" type="image/x-icon" href="https://www.xbox.com/ja-JP/play/games/fortnite/">
+    <title>クラスルーム</title>
+    <link rel="icon" type="image/x-icon" href="https://ssl.gstatic.com/classroom/favicon.png">
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #121212; font-family: sans-serif; }
-        #loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #1a1a1a; display: flex; flex-direction: column; justify-content: center; align-items: center; color: #ffffff; z-index: 9999; }
-        .spinner { border: 4px solid rgba(255, 255, 255, 0.1); width: 50px; height: 50px; border-radius: 50%; border-left-color: #09d; animation: spin 1s linear infinite; margin-bottom: 20px; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        iframe { width: 100%; height: 100%; border: none; }
+        body { background-color: #121212; color: #fff; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        .container { text-align: center; max-width: 500px; padding: 20px; }
+        input[type="text"] { width: 80%; padding: 12px; border: 1px solid #333; background: #222; color: #fff; border-radius: 4px; margin-bottom: 10px; }
+        button { padding: 12px 24px; background: #09d; border: none; color: #fff; border-radius: 4px; cursor: pointer; }
+        iframe { position: fixed; top:0; left:0; width:100%; height:100%; border:none; display:none; }
     </style>
 </head>
 <body>
 
-    <div id="loader">
-        <div class="spinner"></div>
-        <p style="font-size: 18px; letter-spacing: 1px;">フォートナイトを安全に読み込み中...</p>
+    <!-- 通常アクセス時に表示される普通のプロキシ検索画面 -->
+    <div class="container" id="main-ui">
+        <h2>ウェブ検索プロキシ</h2>
+        <p style="color: #888; font-size: 14px;">ブロックを解除したいサイトのURLを入力してください</p>
+        <input type="text" id="url-input" placeholder="https://google.com">
+        <br>
+        <button id="launch-btn">閲覧を開始</button>
     </div>
 
-    <!-- 全画面でXboxを展開するメインフレーム -->
-    <iframe id="game-frame" allow="gamepad; fullscreen; autoplay; screen-wake-lock"></iframe>
+    <iframe id="proxy-frame" allow="gamepad; fullscreen; autoplay; screen-wake-lock"></iframe>
 
     <script>
-        window.addEventListener('DOMContentLoaded', () => {
-            const gameUrl = "https://www.xbox.com/ja-JP/play/games/fortnite/";
-            const frame = document.getElementById('game-frame');
+        const bareServer = "https://uv.studentcenter.biz/bare/";
+        const frame = document.getElementById('proxy-frame');
+        const mainUi = document.getElementById('main-ui');
 
-            // GitHub Pagesでも動作する、全世界共通のパブリックBareサーバー（プロキシ中継点）を利用
-            // 2026年現在、最も安定しているオープンプロキシネットワークのURLを指定
-            const bareServer = "https://uv.studentcenter.biz/bare/"; 
+        // 通常の検索ボタンを押した時の処理
+        document.getElementById('launch-btn').addEventListener('click', () => {
+            let inputUrl = document.getElementById('url-input').value;
+            if (!inputUrl) return;
+            if (!inputUrl.startsWith('http')) inputUrl = 'https://' + inputUrl;
 
-            // プロキシ経由のURLを生成してiframeに流し込む
-            // 外部サーバーを経由させることで、GitHub Pages単体では不可能な「ブロック解除」を実現します
-            frame.src = bareServer + btoa(gameUrl); 
-
-            frame.onload = () => {
-                const loader = document.getElementById('loader');
-                loader.style.opacity = '0';
-                setTimeout(() => { loader.style.display = 'none'; }, 500);
-            };
+            frame.src = bareServer + btoa(inputUrl);
+            mainUi.style.display = 'none';
+            frame.style.display = 'block';
         });
     </script>
 </body>
