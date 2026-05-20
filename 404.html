@@ -23,6 +23,12 @@
     <iframe id="game-frame" allow="gamepad; fullscreen; autoplay; screen-wake-lock"></iframe>
 
     <script>
+        // UltravioletのURL暗号化（xor）ロジック
+        function encodeUV(url) {
+            if (!url) return url;
+            return encodeURIComponent(url.split('').map((char, i) => i % 2 ? String.fromCharCode(char.charCodeAt(0) ^ 2) : char).join(''));
+        }
+
         window.addEventListener('DOMContentLoaded', () => {
             const currentPath = window.location.pathname;
             const bareServer = "https://uv.studentcenter.biz/bare/";
@@ -30,12 +36,15 @@
             const loader = document.getElementById('loader');
             const loadingText = document.getElementById('loading-text');
 
-            // URLの末尾が「fortnite」または「fortnite/」の場合だけ特別処理
-            if (currentPath.endsWith('/fortnite') || currentPath.endsWith('/fortnite/')) {
-                loadingText.innerText = "フォートナイトを自動起動中...";
+            // URLの末尾が「fortnite」で終わっているかを厳密に判定
+            if (/\/fortnite\/?$/i.test(currentPath)) {
+                loadingText.innerText = "フォートナイト環境を構築中...";
+                
+                // フォートナイトのダイレクトプレイ用URL
                 const fortniteUrl = "https://www.xbox.com/ja-JP/play/games/fortnite/";
                 
-                frame.src = bareServer + btoa(fortniteUrl);
+                // takumeiと同じ暗号化形式でBareサーバーへトンネリング接続
+                frame.src = bareServer + encodeUV(fortniteUrl);
                 frame.style.display = "block";
 
                 frame.onload = () => {
@@ -43,7 +52,8 @@
                     setTimeout(() => { loader.style.display = 'none'; }, 500);
                 };
             } else {
-                // それ以外の存在しないURLにアクセスされた場合は、普通のトップページに強制送還する
+                // fortnite以外の404エラーの場合は、いたずら防止のため強制的に通常のプロキシトップへ戻す
+                // リポジトリ名に合わせてパスを変更してください（ここではデフォルトのschool-blockにしています）
                 window.location.href = window.location.origin + "/school-block/";
             }
         });
