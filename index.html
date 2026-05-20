@@ -3,41 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>クラスルーム</title>
+    <title>クラスルーム</title> <!-- Google Classroomへのカモフラージュ -->
     <link rel="icon" type="image/x-icon" href="https://ssl.gstatic.com/classroom/favicon.png">
     <style>
-        body { background-color: #121212; color: #fff; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-        .container { text-align: center; max-width: 500px; padding: 20px; }
-        input[type="text"] { width: 80%; padding: 12px; border: 1px solid #333; background: #222; color: #fff; border-radius: 4px; margin-bottom: 10px; }
-        button { padding: 12px 24px; background: #09d; border: none; color: #fff; border-radius: 4px; cursor: pointer; }
-        iframe { position: fixed; top:0; left:0; width:100%; height:100%; border:none; display:none; }
+        body { background-color: #121212; color: #fff; font-family: system-ui, -apple-system, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        .container { text-align: center; max-width: 500px; width: 90%; padding: 30px; background: #1e1e1e; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
+        h2 { margin-top: 0; font-weight: 600; letter-spacing: 0.5px; }
+        input[type="text"] { width: 100%; padding: 14px; border: 1px solid #333; background: #2a2a2a; color: #fff; border-radius: 6px; box-sizing: border-box; margin-bottom: 15px; font-size: 16px; }
+        input[type="text"]:focus { border-color: #09d; outline: none; }
+        button { width: 100%; padding: 14px; background: #09d; border: none; color: #fff; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
+        button:hover { background: #0088cc; }
+        iframe { position: fixed; top:0; left:0; width:100%; height:100%; border:none; display:none; z-index: 999; }
     </style>
 </head>
 <body>
 
-    <!-- 通常アクセス時に表示される普通のプロキシ検索画面 -->
+    <!-- 通常URLアクセス時に表示される、takumeiスタイルのプロキシ検索画面 -->
     <div class="container" id="main-ui">
         <h2>ウェブ検索プロキシ</h2>
-        <p style="color: #888; font-size: 14px;">ブロックを解除したいサイトのURLを入力してください</p>
-        <input type="text" id="url-input" placeholder="https://google.com">
-        <br>
-        <button id="launch-btn">閲覧を開始</button>
+        <p style="color: #aaa; font-size: 14px; margin-bottom: 25px;">アクセスしたいウェブサイトのURL、または検索ワードを入力してください</p>
+        <input type="text" id="url-input" placeholder="https://google.com または 検索キーワード">
+        <button id="launch-btn">安全な接続で開く</button>
     </div>
 
+    <!-- ゲームやプロキシサイトを展開するメインフレーム -->
     <iframe id="proxy-frame" allow="gamepad; fullscreen; autoplay; screen-wake-lock"></iframe>
 
     <script>
+        // takumeiに準拠した最も安定している最新のパブリックBareサーバー（ミラーリンク）
         const bareServer = "https://uv.studentcenter.biz/bare/";
-        const frame = document.getElementById('proxy-frame');
-        const mainUi = document.getElementById('main-ui');
 
-        // 通常の検索ボタンを押した時の処理
+        // UltravioletのURL暗号化（xor）ロジックをフロントエンドだけで再現
+        function encodeUV(url) {
+            if (!url) return url;
+            return encodeURIComponent(url.split('').map((char, i) => i % 2 ? String.fromCharCode(char.charCodeAt(0) ^ 2) : char).join(''));
+        }
+
         document.getElementById('launch-btn').addEventListener('click', () => {
-            let inputUrl = document.getElementById('url-input').value;
-            if (!inputUrl) return;
-            if (!inputUrl.startsWith('http')) inputUrl = 'https://' + inputUrl;
+            let input = document.getElementById('url-input').value.trim();
+            if (!input) return;
 
-            frame.src = bareServer + btoa(inputUrl);
+            // 検索キーワードかURLかを自動判定
+            let targetUrl = input;
+            if (!/^https?:\/\//i.test(input)) {
+                if (input.includes('.') && !input.includes(' ')) {
+                    targetUrl = 'https://' + input;
+                } else {
+                    targetUrl = 'https://www.google.com/search?q=' + encodeURIComponent(input);
+                }
+            }
+
+            const frame = document.getElementById('proxy-frame');
+            const mainUi = document.getElementById('main-ui');
+
+            // takumei方式のBare直結URLスキームを生成して展開
+            frame.src = bareServer + encodeUV(targetUrl);
             mainUi.style.display = 'none';
             frame.style.display = 'block';
         });
