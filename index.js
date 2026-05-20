@@ -1,17 +1,13 @@
-import { createBareServer } from '@tomphttp/bare-server-node'; // ← ここに { } を付けました
+import { createBareServer } from '@tomphttp/bare-server-node';
 import http from 'node:http';
 import express from 'express';
-import { uvPath } from '@titaniumnetwork-dev/ultraviolet';
 import { join } from 'node:path';
 
 const bare = createBareServer('/bare/');
 const app = express();
 
-// 静的ファイル（HTMLなど）を public フォルダから配信
+// publicフォルダの中身をウェブサイトとして公開する
 app.use(express.static(join(process.cwd(), 'public')));
-
-// Ultravioletのコアファイルをルートに紐付け
-app.use('/uv/', express.static(uvPath));
 
 const server = http.createServer();
 
